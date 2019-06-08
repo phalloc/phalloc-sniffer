@@ -5,7 +5,6 @@ With the ever increasing dependance on wireless solutions, it sometimes is usefu
 
 This software is meant for educational purpose only. The author will not be held liable for any harm that is related to the software.
 
-Note: This software was created as an assignment/project as part of the Operating Systems course at IIT Roorkee.
 
 Instructions for Compilation
 ----------------------------

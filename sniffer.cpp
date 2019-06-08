@@ -15,10 +15,11 @@ const int num_channels = 5;
 #include <set>
 #include <iostream>
 
-
+#include <string>
+#include <sstream>
 //#include "json.h"
 
-
+#include <sys/time.h>
 // for convenience
 //using json = nlohmann::json;
 
@@ -120,7 +121,21 @@ void handleMAC(const u_char * mac, int pos) {
   string mac_str(mac_c_str);
   mac_count[current_channel][pos][mac_str]++;
   time_t t = time(NULL);
-  mac_timestamp.insert(make_pair(mac_str,string(ctime(&t))));
+  long int t1 =  t;
+  //
+  std::stringstream ss;
+  ss << t;
+  std::string ts = ss.str();
+
+  struct timeval tp;
+  gettimeofday(&tp, NULL);
+  long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+  std::stringstream ms_ss;
+  ms_ss << ms;
+  std::string ts1 = ms_ss.str();
+
+  //mac_timestamp.insert(make_pair(mac_str,string(ctime(&t))));
+  mac_timestamp.insert(make_pair(mac_str, ts1));
   debug("MAC %d : %s",pos,mac_c_str);
 }
 
@@ -264,59 +279,83 @@ void print_info() {
       total_mac_count += it->second;
       total_unique_mac_count += 1;
     }
+    int debug1 =1;
+    if (debug1 == 0)
+    {
     cout << "In channel " << i << ":\n";
     cout << " Number of unique MACs seen = " << total_unique_mac_count << endl;
     cout << " Total number of MACs seen  = " << total_mac_count << endl;
     cout << " Total packets captured     = " << channel_packets[i] << endl;
     cout << " Packet capture rate        = " << (channel_packets[i]/channel_time[i]) << " packets/sec" << endl;
     cout << "\n";
+  }
     overall_total_mac_count += total_mac_count;
     overall_total_packets_captured += channel_packets[i];
     overall_total_time += channel_time[i];
   }
   if ( suppressed ) {
-    cout << "Note: Output for empty channels suppressed.\n";
+    //cout << "Note: Output for empty channels suppressed.\n";
   }
   if ( macstat_flag ) {
-    cout << "\nMAC Stats: \n"; string prev_mac = "";
+    //cout << "\n\"MAC Stats\":{ \n";
+    cout << "[" << endl;
+    string prev_mac = "";
     string prev_ts = "";
     int ts_count = 1;
     for ( multimap<string,string>::iterator it = mac_timestamp.begin() ; it != mac_timestamp.end() ; it++ ) {
       string mac = it->first;
       if ( it->second != prev_ts || mac != prev_mac ) {
         if ( ts_count > 1 ) {
-          cout << " x " << ts_count;
+//          cout << " x " << ts_count;
         }
         ts_count = 1;
         cout << endl;
       } else {
         ts_count++;
       }
-      if ( mac != prev_mac ) {
-        cout << "  {\"mac\" : \"" << mac << "\" }- " << mac_timestamp.count(mac) << endl;
+      if ( mac != prev_mac )
+      {
+        cout << "  {\"mac\" : \"" << mac << "\"";
         ts_count = 1;
         prev_ts = "";
-      }
-      if ( prev_ts != it->second ) {
-        string temp = it->second;
-        temp.erase(temp.length()-1,1);
-        cout << "    " << temp;
-      }
+
+
+      //if(strcmp(mac, "FFFFFFFFFFFF")==0)
+       if((mac == "FFFFFFFFFFFF"))
+      {
+
+              if ( prev_ts != it->second ) {
+                string temp = it->second;
+                temp.erase(temp.length()-1,1);
+                cout << "  , \"ts\" : \"" << temp << "\"}"  << endl;
+              }
+    }
+              else
+      {
+
+              if ( prev_ts != it->second ) {
+                string temp = it->second;
+                temp.erase(temp.length()-1,1);
+                cout << "  , \"ts\" : \"" << temp << "\"},"  << endl;
+              }
+    }
+
+}
       prev_mac = mac;
       prev_ts = it->second;
     }
-    if ( ts_count > 1 ) {
-      cout << " x " << ts_count;
-    }
-    else {
-      cout << " x " << 0;
-    }
-    cout << "\n\n";
+//    if ( ts_count > 1 ) {
+//      cout << " x " << ts_count;
+//    }
+//    else {
+//      cout << " x " << 0;
+//    }
+    cout << "]\n\n";
   }
-  cout << "Overall:\n";
-  cout << " Number of unique MACs seen = " << overall_macs.size() << endl;
-  cout << " Total number of MACs seen  = " << overall_total_mac_count << endl;
-  cout << " Total packets captured     = " << overall_total_packets_captured << endl;
-  cout << " Packet capture rate        = " << overall_total_packets_captured/overall_total_time << " packets/sec" << endl;
+//  cout << "Overall:\n";
+  //cout << " Number of unique MACs seen = " << overall_macs.size() << endl;
+  //cout << " Total number of MACs seen  = " << overall_total_mac_count << endl;
+  //cout << " Total packets captured     = " << overall_total_packets_captured << endl;
+  //cout << " Packet capture rate        = " << overall_total_packets_captured/overall_total_time << " packets/sec" << endl;
   cout << "\n";
 }
